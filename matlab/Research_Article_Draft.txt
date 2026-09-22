@@ -1,0 +1,194 @@
+================================================================================
+DRAFT MANUSCRIPT - GPS Solutions (target)
+Multi-Constellation GNSS Ionospheric Monitoring over the Indian EIA Crest:
+GPS, Galileo, BeiDou and QZSS TEC, ROTI and Plasma-Bubble Characterization
+from RINEX 3.04 Dense-Receiver Data, 1-5 May 2025
+================================================================================
+Authors: [TO FILL] | Code base: CSSRG Laboratory, KMITL (Tongkasem et al.)
+Status: working draft - all numbers below are measured from local products.
+
+================================================================================
+ABSTRACT [~200 words, TO POLISH]
+================================================================================
+We present a portable, fully open MATLAB pipeline that derives slant/vertical
+total electron content (TEC), rate-of-TEC index (ROTI) and ionospheric
+irregularity diagnostics from RINEX 3.04 observations of GPS, Galileo,
+BeiDou and QZSS, and apply it to 7 Indian-sector stations over 1-5 May 2025
+(solar maximum, geomagnetically quiet). Pure-MATLAB RINEX readers replace
+legacy binaries; satellite differential code biases come from CODE MGEX
+observable-specific biases (OSB). Constellation agreement against the
+validated GPS chain is r = 0.95 (Galileo), 0.98 (BeiDou), 0.98 (QZSS) on
+5-minute VTEC medians, with RMSE 5.8-10.0 TECU; inter-station agreement
+reaches r = 0.93-0.96. Adding the three constellations multiplies usable
+ionospheric pierce points by x2.2-x4.5. A 112-window EPB/TID catalog for the
+interval isolates a regional post-sunset plasma-bubble night on 4 May
+(peak ROTI 2.96 TECU/min, DTEC peak-to-peak ~20 TECU, 13-52 min periods,
+six stations), recurrent ~18:00-18:30 IST sunset onsets, and morning
+MSTID-like activity. Receiver-bias day-to-day scatter is 1.4-7.6 TECU.
+Limitations (receiver-DCB-referenced absolute level, no GLONASS, no
+per-IPP azimuth) are stated quantitatively; a local CODE GIM cross-check
+(r=0.65-0.83) anchors the diurnal morphology.
+
+================================================================================
+1. INTRODUCTION
+================================================================================
+1.1 Equatorial ionosphere over India: EIA crest, EPBs, scintillation impact
+    on navigation.
+1.2 Why multi-GNSS: IPP density, frequency diversity, resilience to
+    constellation-specific outages. Prior regional work is GPS-dominated.
+1.3 Contributions:
+    (C1) Portable open MATLAB RINEX 3.04 pipeline (pure-MATLAB readers;
+         one config file; no binaries) for GPS+Galileo+BeiDou+QZSS TEC/ROTI.
+    (C2) CODE MGEX OSB satellite-DCB integration with per-pair coverage
+         accounting.
+    (C3) 112-window EPB/TID catalog + morphology for a quiet solar-maximum
+         week, including a regional EPB night resolved by 3 constellations.
+    (C4) Local-only validation suite (stability, agreement, OSB shift).
+
+================================================================================
+2. DATA AND METHODS
+================================================================================
+2.1 Observations. IGS daily RINEX 3.04, 30 s, 01-05 May 2025 (DOY 121-125).
+    10 files/day; 7 stations processed (BHPL, DRDN, GDKG, JDPR, LCK4, PBR4,
+    SHLG). BIND/IISC/IITK excluded: no local navigation files and no
+    network for download (stated, reproducible skip rule).
+    GPS: ~27-32k rows/station-day, PRNs 1-32 (excl. 21); Galileo: 27 PRNs;
+    BeiDou: up to 45 PRNs (GEO/IGSO/MEO); QZSS: PRNs 2,3,4,7.
+2.2 Signal pairs (auto-selected per file by joint validity):
+    GPS L1/L2 (C1C/L1C + C2W/L2W or C2X/L2X); Galileo E1/E5a (fb E1/E5b);
+    BeiDou B1I/B2I (fb B1C/B2a); QZSS L1/L2 (fb L1/L5). k recomputed per
+    pair; loss-of-lock zeros mapped to NaN.
+2.3 Orbits. Broadcast Keplerian via unmodified solver; Galileo/BeiDou/QZSS
+    decoded to GPS-layout elements (weeks already GPS-aligned in source
+    files; verified: |r| E=29,595 km; C GEO=42,149/MEO~27,906 km; J within
+    e=0.0747 bounds). GLONASS deferred (FDMA + integrator out of scope).
+2.4 TEC. Carrier-to-code leveling per continuous arc, elevation mask 30 deg,
+    350 km thin shell, Ma-Maruyama receiver-bias search; satellite DCB from
+    CODE MGEX OSB (GPS 25-31/32 sats; Galileo E1/E5a full where used;
+    E5b/B2I pairs uncovered -> zeros, absorbed by receiver term, logged).
+2.5 ROTI (Pi et al. 1997): std of carrier-rate over trailing 5-min window,
+    per-second grid; thresholds 0.2/0.5/1.0 TECU/min. NOTE for reviewers:
+    ROTI rows sit on T=0 mod 60 s grid, offset ~1 sample from the 30 s obs
+    grid; matching uses nearest-valid <= 120 s.
+2.6 EPB/TID catalog. Contiguous per-PRN ROTI>=0.3 segments >=10 min (gaps
+    <=5 min merged). Per event: peak ROTI, DTEC (1-h detrend) peak-to-peak
+    and depletion depth, FFT dominant period (10-120 min), supporting-sats
+    count. Rules: EPB = local 17.5-24 h IST and (peak>=0.5 or depth<=-5);
+    TID = spectral 15-90 min peak with prominence>=2.
+2.7 Ancillary. MW/GF combinations for cycle-slip proxy (MW jump>0.75 cyc);
+    space-weather indices (Dst/Kp/ap/F10.7/IMF Bz) from local CSVs.
+
+================================================================================
+3. RESULTS (measured 01-05 May 2025)
+================================================================================
+3.1 Coverage. 34 station-days GPS; Galileo 34 files, BeiDou 15 (GDKG/JDPR/
+    LCK4 only), QZSS 19 dense-enough pairs. IPP density gain x2.23 (PBR4)
+    to x4.46 (GDKG) vs GPS-only.
+3.2 VTEC morphology. GPS daily means ~20-56 TECU; constellation medians:
+    Galileo 36.2, BeiDou 39.8, QZSS 24.6 (sparse arcs) TECU. Diurnal EIA
+    shape coherent across systems (agreement below).
+3.3 Absolute level and DCB. Satellite DCB from OSB shifts VTEC mean by
+    median -3.68 TECU (physical direction). Receiver DCB 14-86 TECU with
+    day-to-day std 1.4-7.6 TECU: precise but biased high, attributed to
+    violated nighttime-zero assumption at solar-max EIA (stated limitation;
+    morphology/ROTI unaffected).
+3.4 Quiet background + active night. Monitor maxima mostly <0.2 TECU/min;
+    zero sustained (>=15 min, >=0.5) events network-wide; Dst stayed >-50.
+    4 May evening is the outlier (below).
+3.5 EPB night 4 May. Post-sunset 13-21 UTC candidates at all six stations:
+    peak ROTI LCK4 G10 2.96, JDPR G02 2.26, GDKG G01 2.09; DTEC ptp up to
+    ~20 TECU (GDKG G01, PBR4 G28); periods 13-52 min; multi-satellite
+    support (not single-sat artifacts).
+3.6 Recurrent onset + MSTIDs. G32 ~12.4-13.0 UTC (~18:00-18:30 IST) EPB
+    onsets repeat day-01/02 (JDPR/SHLG/BHPL). Morning PBR4 G05/G06/G14
+    events (LT ~10-11, ROTI 0.5-1.5, DTEC 0.5-3 TECU) on all 5 days:
+    MSTID-like. Two post-midnight spectral TIDs (BHPL G03 T~35 min,
+    GDKG G03 T~23 min, day-05).
+3.7 GF/slip diagnostics. Geometry-free residual distribution over
+    11,506 samples: mean 0.0006 m, std 0.0497 m; MW-jump slip proxy e.g.
+    2025 events (PBR4, 4 May).
+
+================================================================================
+4. VALIDATION AND DISCUSSION
+================================================================================
+4.1 Constellation agreement vs GPS (5-min VTEC medians, >=60 overlap bins):
+    Galileo 34 pairs r=0.9525 bias=+3.86 RMSE=7.45; BeiDou 15 pairs
+    r=0.9824 bias=+5.32 RMSE=9.96; QZSS 19 pairs r=0.9799 bias=-2.43
+    RMSE=5.77 (all TECU). Independent orbits/frequencies/DCBs converge.
+4.2 True 2-D IPP mapping (computeIPP.m): per-epoch/per-satellite pierce
+    points recomputed from saved obs/nav (350 km shell, azimuth via ENU
+    rotation), elevation cross-checked against pipeline (<0.1 deg);
+    interpolated VTEC/ROTI maps at event epochs (aplotIPPmap.m).
+4.3 Hypothesis tests (t via incomplete beta + 10k-permutation p, no toolbox):
+    (A) OSB vs zero sat-DCB, paired VTEC, n=34: -3.54 TECU, p~7e-6,
+    d=-0.92 (significant, physical direction); (B) receiver DCB active
+    EPB night vs quiet days, Welch, n=34: +2.48 TECU, p=0.72 (null ->
+    Ma-Maruyama robust across conditions); (C) same-hardware paired
+    receiver DCB, Galileo-GPS: -41.2 TECU, p~4e-14 (systematic inter-
+    system offset: hardware chains + geometry, stated as combined effect);
+    BeiDou-GPS: +0.93 TECU, p=0.87 (null -> consistent). QZSS: single-day
+    searches peg at the +-30 ns bounds, so a 5-day pooled per-station
+    estimate was attempted - it recovers interior minima at 3/7 stations
+    (LCK4 -3.6, PBR4 +52.5, SHLG -2.9 TECU vs GPS means 54.7/69.2/52.3)
+    while BHPL/DRDN/GDKG stay pegged: uniformly high-elevation IGSO slant
+    factors flatten the Ma-Maruyama cost (structural identifiability
+    limit, shown in the cost-curve figure). n=3 sits below any formal-test
+    floor, so QZSS offsets stay descriptive; J TEC/ROTI products unaffected.
+4.4 Inter-station agreement: median pairwise r = 0.93-0.96/day.
+4.5 External check vs CODE GIM (IONEX, 1-h, 2.5x5-deg grid, bilinear at
+    station, 2 May 2025, 7 stations, 5-min VTEC medians): Pearson
+    r(pipe,GIM) = 0.65-0.83 (best GDKG 0.829, PBR4 0.808); mean bias
+    -0.1 to -7.8 TECU (negative = pipeline below GIM, consistent with
+    receiver-DCB subtraction in the local chain); RMSE 14.5-18.2 TECU.
+    The bias is not an error: the Ma-Maruyama local solution is DCB-
+    referenced, while CODE GIM is a global code-leveled absolute product.
+    Shape/phase agreement (r) is the meaningful metric here.
+4.6 Limitations (explicit): (i) absolute VTEC carries receiver-bias
+    uncertainty ~ several TECU - GIM comparison confirms systematic offset
+    but local bias-removal is intentional (see 4.5); (ii) nighttime-zero
+    assumption violated at solar-max EIA -> receiver DCB biased high
+    (precision 1.4-7.6 TECU/day retained); (iii) no zonal drift velocities
+    (needs IPP-tracked cross-correlation; future work); (iv) GLONASS
+    absent; (v) BIND/IISC/IITK unprocessed (no nav files); (vi) ML
+    classifier excluded - threshold labels make RF accuracy tautological.
+4.7 Comparison with literature: GF residual width and EPB climatology
+    consistent with equatorial solar-maximum behavior [refs].
+
+================================================================================
+5. CONCLUSION
+================================================================================
+A portable open pipeline delivers validated multi-constellation (GPS +
+Galileo + BeiDou + QZSS) TEC/ROTI over India; cross-constellation agreement
+r>0.95 and x2-4 IPP gain are demonstrated; a 112-window catalog isolates a
+regional 4-May EPB night with quantitative morphology. Remaining work:
+GLONASS FDMA, azimuth-resolved drift analysis, and multi-day GIM
+comparison across the full 5-day window.
+
+================================================================================
+CODE/DATA AVAILABILITY
+================================================================================
+MATLAB code versioned in git (commits: baseline, portability, OSB+validation,
+Phase-4 ECJ, validation-agreement). RINEX/MGEX inputs are third-party (IGS);
+processed products + figure scripts regenerate all results via one command.
+Original CSSRG KMITL code preserved in function/.
+
+ACKNOWLEDGEMENTS: CSSRG/KMITL (Tongkasem et al. code base); IGS; CODE/AIUB
+MGEX products (DOI 10.48350/197028).
+
+REFERENCES (core; expand on submission)
+================================================================================
+- Pi, X., et al. (1997). Monitoring of global ionospheric irregularities
+  using the worldwide GPS network. Geophys. Res. Lett., 24(18), 2283-2286.
+- Ma, G., & Maruyama, T. (2003). Derivation of TEC and estimation of
+  instrumental biases from GEONET in Japan. Ann. Geophys., 21, 2083-2099.
+- Montenbruck, O., et al. (2017). The Multi-GNSS Experiment (MGEX) of the
+  IGS. Adv. Space Res. (https://doi.org/10.1016/j.asr.2016.09.029).
+- Schaer, S. (1999). Mapping and predicting the Earth's ionosphere using
+  GPS. PhD thesis, Univ. Bern (CODE GIM).
+- Villiger, A., et al. (2019). Determination of GNSS pseudo-absolute code
+  biases. J. Geodesy. (CODE OSB method)
+- Klobuchar, J. A. (1987). Ionospheric time-delay algorithm for
+  single-frequency GPS users. IEEE Trans. Aerosp. Electron. Syst.
+================================================================================
+END OF DRAFT
+================================================================================

@@ -1,0 +1,14 @@
+# Version code + docs only. Large binaries/data stay on local disk
+# (documented in README.md; bulk duplicates archived in TEC_archive_2026-09
+# with ARCHIVE_MANIFEST.csv) and are fetched/provided per-machine via config.
+*.23o
+*.23n
+*.rnx
+*.rar
+*.mat
+*.mexw64
+*.exe
+*.asv
+Temp.n
+Results/
+RINEX/Results/

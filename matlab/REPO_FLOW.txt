@@ -1,0 +1,26 @@
+================================================================================
+                    REPO FLOW - MULTI-GNSS TEC PROCESSOR
+================================================================================
+
+STEP 0 - EDIT (one file): config.m
+    local paths (dataRoot/mgexRoot/outRoot), dateRange, stations,
+    constellations, thresholds, allowDownload.
+
+STEP 1 - RUN (single entry point):
+    >> MultiGNSS_Main
+    >> MultiGNSS_Main('/data/igs/2025-05-01')
+    >> MultiGNSS_Main('dataRoot', X, 'stations', {'BHPL'})
+
+STEP 2 - INSPECT: <outRoot>/
+    MultiGNSS_Dashboard.png, MultiGNSS_VTEC_SpatialMap.png,
+    plot*_Matlab.png (8), Phase3_*.png/.mat, DCB_*.png/.mat,
+    ROTI_events.mat, MultiGNSS_*.mat, TEC_*.mat
+
+DEPENDENCIES (all portable MATLAB, no binaries):
+    MultiGNSS_Main.m + config.m
+     |- function/* (original CSSRG code; readrinex304 patched for explicit
+     |   nav + pure-MATLAB rinex3obs/nav_gps readers; dlsat uses websave)
+     |- plot*.m (8) + aplot*.m + acharEPBTID.m + helpers (roti5min,
+     |   ecef2lla, loadStationPositions, getDefaultStationData, repoRoot)
+     |- PPPindex.txt (repo root; resolved via repoRoot(), any cwd)
+================================================================================
